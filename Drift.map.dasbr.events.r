@@ -97,7 +97,18 @@ Drift.map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesI
         # truncate data to only include location records while DASBR was deployed, and plot the tracks
         LookupInd<-which(lookup$station==stations[n]) 
         if(!is.na(lookup$dateTimeEnd[LookupInd[1]])){ # for DASBRs that have been retrieved
-          data.n.trunc<- filter(data.n, dateTime>=lookup$dateTimeStart[LookupInd[1]] & dateTime<=lookup$dateTimeEnd[LookupInd[1]])
+         
+          #Determine end of recording time and plot position 
+          dbInd<-which(DriftDB$Drift==stations[n])
+          conn <- dbConnect(sqlite,file.path(DBDir,DriftDB$Database[dbInd]))
+          SoundAq<- dbReadTable(conn, "Sound_Acquisition")         #read offline events
+          SoundAq$UTC<-strptime(SoundAq$UTC,format="%Y-%m-%d %H:%M:%OS",tz="UTC")
+          EndTime<-SoundAq$UTC[nrow(SoundAq)]
+          EndTime<-as.POSIXct(EndTime, tz="UTC")
+          #If pickup time is before end of recording, use pickup time (sometimes recorders are left on)
+          if(lookup$dateTimeEnd[LookupInd[1]]<EndTime){EndTime<-lookup$dateTimeEnd[LookupInd[1]]}
+          
+          data.n.trunc<- filter(data.n, dateTime>=lookup$dateTimeStart[LookupInd[1]] & dateTime<=EndTime)
           
           #Remove outliers based on speed between detections (set to 1 km/hour here)
           data.n.trunc<-cutoutliers(data.n.trunc,4)
@@ -105,7 +116,7 @@ Drift.map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesI
           
           #Interpolate between SPOT GPS positions
           #Create vector of time
-          DriftMin<-seq.POSIXt(lookup$dateTimeStart[LookupInd[1]],lookup$dateTimeEnd[LookupInd[1]],by="1 min")
+          DriftMin<-seq.POSIXt(data.n.trunc$dateTime[1],data.n.trunc$dateTime[nrow(data.n.trunc)],by="1 min")
           fLat<-approxfun(data.n.trunc$dateTime,data.n.trunc$lat) #Interpolation function for latitudes
           fLong<-approxfun(data.n.trunc$dateTime,data.n.trunc$long) #Interpolation function for longitudes
           iLat<-fLat(DriftMin) 
@@ -133,7 +144,10 @@ Drift.map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesI
 
           points(Drift$long,Drift$lat,col="Grey",pch='.')
           points(data.n.trunc$long, data.n.trunc$lat, col=dasbr.ptColor,pch=20,cex=.5)  # plot the track
-         
+          points(data.n.trunc$long[which.min(data.n.trunc$dateTime)], 
+                 data.n.trunc$lat[which.min(data.n.trunc$dateTime)], pch=15,cex=1.3)  # add points showing DASBR origins
+          points(Drift$long[nrow(Drift)],Drift$lat[nrow(Drift)], col=dasbr.ptColor, pch=17,cex=1.3)  # add points showing end time of DASBR recording
+          
           # add station number labels
           if(stations[n] %in% c(19)){offsetV<- -0.3}
           if(stations[n] %in% c(18)){offsetV<- -0.15}
@@ -147,15 +161,11 @@ Drift.map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesI
           if(stations[n] %in% c(7,12,18,19,22)){offsetH<- -0.2}
           if(stations[n] %in% c(8)){offsetH<- -.5}
            text(data.n.trunc$long[2]+offsetH, data.n.trunc$lat[2]+offsetV, labels=stations[n], cex=1.5)
+           
           
-          ##Add points showing BW Events
-          dbInd<-which(DriftDB$Drift==stations[n])
-          
-          #Load in appropriate database
-          conn <- dbConnect(sqlite,file.path(DBDir,DriftDB$Database[dbInd]))                  
+          #Load in Event Info from Database 
           Events <- dbReadTable(conn, "Click_Detector_OfflineEvents")         #read offline events
           Events$eventType<-gsub(" ", "", Events$eventType, fixed = TRUE)
-          
           Events<-filter(Events,eventType %in% SPLabels)
           Events$dateTime<-strptime(Events$UTC,format="%Y-%m-%d %H:%M:%OS")
           Events$dateTime<-as.POSIXct(Events$dateTime, tz="UTC")
@@ -173,10 +183,6 @@ Drift.map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesI
             points(SubEvent$long, SubEvent$lat, col=SpColor[t], pch=19,cex=.75)}
           }}
     legend('topright', legend=SPLabels, pch=19,pt.cex = .75, cex=1, col=SpColor, bg="white")
-    points(data.n.trunc$long[which.min(data.n.trunc$dateTime)], 
-           data.n.trunc$lat[which.min(data.n.trunc$dateTime)], pch=15,cex=1)  # add points showing DASBR origins
-    points(data.n.trunc$long[which.max(data.n.trunc$dateTime)], 
-           data.n.trunc$lat[which.max(data.n.trunc$dateTime)], col=dasbr.ptColor, pch=17,cex=1)  # add points showing DASBR retrievals
     
     dev.off()}
 }

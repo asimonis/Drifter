@@ -71,16 +71,21 @@ map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesID, Map
   ncsvfiles = length(spotcsvfile[[1]])
   stations <- unique(lookup$station)
   
+  lookup$dateTimeStart =  strptime(lookup$dateTimeStart, format="%m/%d/%y %H:%M")
+  lookup$dateTimeEnd =  strptime(lookup$dateTimeEnd, "%m/%d/%y %H:%M")
+  lookup$dateTimeStart<-as.POSIXct(lookup$dateTimeStart,tz="UTC")
+  lookup$dateTimeEnd<-as.POSIXct(lookup$dateTimeEnd,tz="UTC")
+  
   # combine GPS locations from multiple csv files into a single table, with most recent data at the top
   spotcsv = read.csv(spotcsvfile[[1]][ncsvfiles],header=FALSE)
   if(ncsvfiles>1){
-    for(p in (ncsvfiles-1):1){spotcsv = rbind(spotcsv,read.csv(spotcsvfile[[1]][p],header=FALSE))}
+    for(p in 2:ncsvfiles){spotcsv = rbind(spotcsv,read.csv(spotcsvfile[[1]][p],header=FALSE))}
     if(!is.null(station.numbers)){  # if user has specified only a subset of DASBRs, this filters the data accordingly
       spotcsv = spotcsv[spotcsv$V2 %in% lookup$spot.number[lookup$station %in% station.numbers] , ]
     }}
 
   colnames(spotcsv) = c("dateTime", "spotID", "readingType", "lat", "long")
-  dateTime = strptime(spotcsv$dateTime, "%m/%d/%Y %H:%M")
+  spotcsv$dateTime = strptime(spotcsv$dateTime, "%m/%d/%y %H:%M")
   n.stations = length(station.numbers)
   
   #Read in Drift Database lookup for Event Info
@@ -107,56 +112,84 @@ map.dasbr.events <- function(outfilename, station.numbers = NULL, speciesID, Map
   }
   
   #Loop through data for each station and plot DASBR tracks
-  #Offset parameter moves text label slightly away from deployment point; User may need to adjust offset for different map boundaries 
-  offset<-0.3
-  
-  for(i in 1:n.stations){
-    if(is.na(lookup$dateTimeStart[i*2])) next  # for DASBRS that have not yet been deployed, skip to next record
-    if(!is.na(lookup$dateTimeStart[i*2])){  # for DASBRS that have been deployed...
-      # spot data for station i
-      data.i <- spotcsv[spotcsv$spotID %in% lookup$spot.number[lookup$station==stations[i]], ]  
-      # date-time info (in date time format) for station i
-      dateTime.i <- dateTime[spotcsv$spotID %in% lookup$spot.number[lookup$station==stations[i]]]
+  for(n in 1:n.stations){
+    if(is.na(lookup$dateTimeStart[n*2])) next  # for DASBRS that have not yet been deployed, skip to next record
+    if(!is.na(lookup$dateTimeStart[n*2])){  # for DASBRS that have been deployed...
+      # spot data for station n
+      data.n <- spotcsv[spotcsv$spotID %in% lookup$spot.number[lookup$station==stations[n]], 1:5]  
+      data.n$dateTime<-as.POSIXct(data.n$dateTime,tz="UTC")
+      
       # truncate data to only include location records while DASBR was deployed, and plot the tracks
-      if(!is.na(lookup$dateTimeEnd[i*2])){ # for DASBRs that have been retrieved
-        data.i.trunc <- data.i[dateTime.i >= strptime(unique(lookup$dateTimeStart[lookup$station==stations[i]]), "%m/%d/%Y %H:%M")
-                               & dateTime.i <= strptime(unique(lookup$dateTimeEnd[lookup$station==stations[i]]), "%m/%d/%Y %H:%M"), ]
-        data.i.trunc$dateTime<-strptime(data.i.trunc$dateTime,format="%m/%d/%Y %H:%M:%OS")
+      LookupInd<-which(lookup$station==stations[n]) 
+      if(!is.na(lookup$dateTimeEnd[LookupInd[1]])){ # for DASBRs that have been retrieved
+        
+        #Determine end of recording time and plot position 
+        dbInd<-which(DriftDB$Drift==stations[n])
+        conn <- dbConnect(sqlite,file.path(DBDir,DriftDB$Database[dbInd]))
+        SoundAq<- dbReadTable(conn, "Sound_Acquisition")         #read offline events
+        SoundAq$UTC<-strptime(SoundAq$UTC,format="%Y-%m-%d %H:%M:%OS",tz="UTC")
+        EndTime<-SoundAq$UTC[nrow(SoundAq)]
+        EndTime<-as.POSIXct(EndTime, tz="UTC")
+        #If pickup time is before end of recording, use pickup time (sometimes recorders are left on)
+        if(lookup$dateTimeEnd[LookupInd[1]]<EndTime){EndTime<-lookup$dateTimeEnd[LookupInd[1]]}
+        
+        data.n.trunc<- filter(data.n, dateTime>=lookup$dateTimeStart[LookupInd[1]] & dateTime<=EndTime)
         
         #Remove outliers based on speed between detections (set to 4 km/hour here)
-        data.i.trunc<-cutoutliers(data.i.trunc,4)
-        lines(data.i.trunc$long, data.i.trunc$lat, col=dasbr.ptColor)  # plot the track
-        points(data.i.trunc$long[1], data.i.trunc$lat[1], pch=17,cex=.5) # add points showing DASBR retrievals
-
-      # add points showing DASBR origins
-      points(data.i.trunc$long[nrow(data.i.trunc)], data.i.trunc$lat[nrow(data.i.trunc)], col=dasbr.ptColor, pch=15,cex=.5)
-      # add station number labels
-      text(data.i.trunc$long[nrow(data.i.trunc)]+offset, data.i.trunc$lat[nrow(data.i.trunc)]+offset, labels=stations[i], cex=0.5)
+        data.n.trunc<-cutoutliers(data.n.trunc,4)
+        data.n.trunc<-arrange(data.n.trunc,dateTime)
+        
+        #Interpolate between SPOT GPS positions
+        #Create vector of time
+        DriftMin<-seq.POSIXt(data.n.trunc$dateTime[1],data.n.trunc$dateTime[nrow(data.n.trunc)],by="1 min")
+        fLat<-approxfun(data.n.trunc$dateTime,data.n.trunc$lat) #Interpolation function for latitudes
+        fLong<-approxfun(data.n.trunc$dateTime,data.n.trunc$long) #Interpolation function for longitudes
+        iLat<-fLat(DriftMin) 
+        iLong<-fLong(DriftMin)
+        Drift<-data.frame(lat = iLat, long = iLong,dateTime = DriftMin)  
+        
+        lines(Drift$long,Drift$lat, col=dasbr.ptColor)  # plot the interpolated track
+        points(data.n.trunc$long[which.min(data.n.trunc$dateTime)], 
+               data.n.trunc$lat[which.min(data.n.trunc$dateTime)], pch=15,cex=.6)  # add points showing DASBR origins
+        points(Drift$long[nrow(Drift)],Drift$lat[nrow(Drift)], col=dasbr.ptColor, pch=17,cex=.6)  # add points showing end time of DASBR recording
+        
+        # add station number labels
+        #Offset parameter moves text label slightly away from deployment point; User may need to adjust offset for different map boundaries 
+        offsetV<-0.3
+        offsetH<-0.3
+        if(stations[n] %in% c(7)){offsetH<- -0.3}
+        if(stations[n] %in% c(17)){offsetV<- 0
+        offsetH<-0.4}
+        if(stations[n] %in% c(19)){offsetH<- 0
+        offsetV<-0.4}
+        if(stations[n] %in% c(20)){offsetH<- 0.4
+        offsetV<-0}
+        if(stations[n] %in% c(22)){offsetH<- -.4}
+        if(stations[n] %in% c(23)){offsetH<- 0.5
+        offsetV<- 0}
+        
+        text(data.n.trunc$long[2]+offsetH, data.n.trunc$lat[2]+offsetV, labels=stations[n], cex=0.5)
       
       ##Add points showing BW Events
-      dbInd<-which(DriftDB$Drift==stations[i])
-      
-      #Load in appropriate database
-      conn <- dbConnect(sqlite,file.path(DBDir,DriftDB$Database[dbInd]))                  
       Events <- dbReadTable(conn, "Click_Detector_OfflineEvents")         #read offline events
       Events$eventType<-gsub(" ", "", Events$eventType, fixed = TRUE)
       
       Events<-filter(Events,eventType %in% speciesID[[S]])
       Events$dateTime<-strptime(Events$UTC,format="%Y-%m-%d %H:%M:%OS")
-      Events$dateTime<-as.POSIXct(Events$dateTime)
+      Events$dateTime<-as.POSIXct(Events$dateTime, tz="UTC")
       
-      #Compare Event Start Time with Time in Drift GPS data.frame (data.i.trunc)
+      #Compare Event Start Time with Time in Drift GPS data.frame (data.n.trunc)
       for(e in 1:nrow(Events)){
-      TD<-as.numeric(difftime(Events$dateTime[e],data.i.trunc$dateTime,units="min"))
+      TD<-as.numeric(difftime(Events$dateTime[e],Drift$dateTime,units="min"))
       GPSind<-which.min(abs(TD))
-      Events$lat[e]<-data.i.trunc$lat[GPSind]
-      Events$long[e]<-data.i.trunc$long[GPSind]}
+      Events$lat[e]<-Drift$lat[GPSind]
+      Events$long[e]<-Drift$long[GPSind]}
       
       # add points showing event locations
       for(t in 1:length(unique(speciesID[[S]]))){
       ColInd<-which(SPLabels == speciesID[[S]][t])
       SubEvent<-dplyr::filter(Events,Events$eventType==speciesID[[S]][t])
-      points(SubEvent$long, SubEvent$lat, col=SpColor[ColInd], pch=19,cex=.5)
+      points(SubEvent$long, SubEvent$lat, col=SpColor[ColInd], pch=19,cex=.4)
       # points(SubEvent$long, SubEvent$lat, col='LightGray', pch=19,cex=.5)
       }}}}
   

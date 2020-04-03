@@ -1,21 +1,23 @@
 source('~/CCE DASBR/code/cutoutliers.R')
-source('~/CCE DASBR/code/map.comment.dasbr.events.r')
+source('~/CCE DASBR/code/map.comment.events.r')
 source('~/CCE DASBR/code/Drift.map.events.r')
 source('~/CCE DASBR/code/Drift.map.comment.events.r')
-
+source('~/CCE DASBR/code/map.events.r')
 
 #Create a single map with multiple drifts and events
-map.dasbr.events(outfilename = "DASBRmap_Alldrifts", station.numbers=c(4,7,8,10,12,13,14,16,17,18,19,20,21,22,23),
-                 speciesID=list(c("ZC"),c("BB","MS"),c("BW43","BW37V","BWC"),c("BW"),c("?BW"),("PM")),
-                 MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data',DBDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data',
-                                  spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 to 7 - July 31 1700 to Aug 8 1700.csv",
-                                                       "DASBRs 1 to 10 - Aug 8 1700 to Aug 26 1700.csv", "DASBRs 1 to 13 - Aug 26 1700 to Sep 12 1700.csv",
-                                                       "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
-                                                       "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
-                                                       "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                                                       "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv")),
-                                  DriftFile='Drift_FileLookup.csv',
-                                  shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv", showStudyBound=FALSE, extent="CCES",figtitle='Drifts 4-23')
+map.events(outfilename = "DASBRmap_Alldrifts", station.numbers=c(4,7,8,10,12,13,14,16,17,18,19,20,21,22,23),
+           speciesID=list(c("ZC"),c("BB","MS"),c("BW43","BW37V","BWC"),c("BW"),c("?BW"),("PM")),
+           MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data',
+           DBDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data',
+           spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 to 7 - July 31 1700 to Aug 8 1700.csv",
+                                "DASBRs 1 to 10 - Aug 8 1700 to Aug 26 1700.csv", "DASBRs 1 to 13 - Aug 26 1700 to Sep 12 1700.csv",
+                                "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
+                                "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
+                                "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
+                                "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv")),
+           DriftFile='Drift_FileLookup.csv',
+           shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv", showStudyBound=FALSE, extent="CCES",figtitle='Drifts 4-23',
+           SaveTracks = TRUE)
 
 #Create map of all drifts without any events 
 map.drifts(outfilename = "Alldrifts", station.numbers=c(1:23),
@@ -38,7 +40,7 @@ Drift.map.events(outfilename = "DASBRmap", station.numbers=c(4,7,8,10,12,13,14,1
                                             "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
                                             "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
                                             "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                                            "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv")),
+                                            "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv")),
                        DriftFile='Drift_FileLookup.csv',
                        shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv",figtitle='CCES:2018')
 
@@ -54,7 +56,7 @@ EventInfoZc<-find.dasbr.events(station.numbers = c(4,7,8,10,12,13,14,16,17,18,19
                   lookupfile="spotlookup_US&MX_RETRIEVED.csv")
 
 
-map.comment.dasbr.events(outfilename = "NBHF_Alldrifts", station.numbers=c(7,8,10,12,13,14,16,18,19,20,21,22,23),
+map.comment.events(outfilename = "NBHF_Alldrifts", station.numbers=c(7,8,10,12,13,14,16,18,19,20,21,22,23),
                  speciesID=list(c("NBHF")),
                  MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data/',DBDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data/NBHF Data',
                  spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 to 7 - July 31 1700 to Aug 8 1700.csv",
@@ -62,7 +64,7 @@ map.comment.dasbr.events(outfilename = "NBHF_Alldrifts", station.numbers=c(7,8,1
                                       "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
                                       "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
                                       "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                                      "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv")),
+                                      "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","DASBRs - Sept 27 to Oct 28.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv")),
                  DriftFile='NBHF_FileLookup.csv',
                  shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv", showStudyBound=FALSE, extent="CCES",figtitle='Drifts 7-23')
 
@@ -74,14 +76,14 @@ Drift.map.comment.events(outfilename = "NBHF", station.numbers=c(7),
                                               "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
                                               "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
                                               "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                                              "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv")),
+                                              "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv")),
                          DriftFile='NBHF_FileLookup.csv',
                          shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv", figtitle='NBHF')
 
 
 ###
 outfilename = "DASBRmap"
-station.numbers=c(17)
+station.numbers=c(14)
 speciesID=list(c("ZC","BB","MS","BW43","BW37V","BWC","BW"))
 MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data'
 DBDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data'
@@ -90,7 +92,7 @@ spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 
                      "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
                      "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
                      "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                     "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv"))
+                     "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv"))
 
 DriftFile='Drift_FileLookup.csv'
 shiptrack.xy=NULL
@@ -101,7 +103,7 @@ showStudyBound=FALSE
 
 ####
 outfilename = "NBHF_Alldrifts"
-station.numbers=c(7)
+station.numbers=c(14)
 speciesID=list(c("NBHF"))
 ClassLabels<-c('<110 kHz','114-124 kHz','125-129 kHz','130-139 kHz','140+ kHz')
 MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data'
@@ -111,7 +113,8 @@ spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 
                      "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
                      "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
                      "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
-                     "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv"))
+                     "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv"))
+
 DriftFile='NBHF_FileLookup.csv'
 shiptrack.xy=NULL
 lookupfile="spotlookup_US&MX_RETRIEVED.csv"

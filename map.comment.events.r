@@ -11,7 +11,9 @@ sqlite <- dbDriver("SQLite")
 ## FUNCTION map.dasbr.events ##
 
 # Created by AES, 30 August 2019; Adapted from MAP.DASBR2 (by JEM, 3 Sept 2016)
-# Function plots the path of a specified DASBR and associated events along its path
+# Function plots the path of a group of DASBRs and associated events 
+# with event colors defined by comments in Pamguard database
+# Individual plots are made for each species, or group of species in a list
 
 # INPUTS to Function:
 # station.numbers = a vector.  Each list element contains station numbers from a data file to plot, e.g., station.numbers = c(1,3,7).

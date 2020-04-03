@@ -1,6 +1,3 @@
-
-#2. Create mini map for single drift and large map for single species
-
 #Marmap tutorial: https://www.molecularecologist.com/2015/07/marmap/
 
 #Required libraries
@@ -15,11 +12,13 @@ sqlite <- dbDriver("SQLite")
 ## FUNCTION map.dasbr.events ##
 
 # Created by AES, 30 August 2019; Adapted from MAP.DASBR2 (by JEM, 3 Sept 2016)
-# Function plots the path of a specified DASBR and associated events along its path
+# Function plots the path of a single DASBR drift and associated events 
+# with event colors defined by comments in Pamguard database
 
 # INPUTS to Function:
 # station.numbers = a vector.  Each list element contains station numbers from a data file to plot, e.g., station.numbers = c(1,3,7).
 # speciesID = a list of the species ID's to include in the plot; e.g. list(c("ZC","BB","BW43","MS","MD","BW39V","BW70","BWC","IP","?BW","BW","BW26-47"))
+# ClassLabels = a list of classes defined within comments of Pamguard acoustic events - these will determine the color of plotted events
 # spotcsvfile = a list containing names of csv file/s containing date-time-locations for a set of spot devices, created using Advanced Download in the SPOT website
 # shiptrack.xy = two-column matrix with longitude and latitude coordinates of the ship's progress, in decimal degrees
 # lookup = lookup table indicating spotID and deployment period for each DASBR station.  LOOKUP MUST ONLY INCLUDE DEVICES THAT WILL BE PLOTTED.
@@ -215,6 +214,17 @@ Drift.map.comment.events <- function(outfilename, station.numbers = NULL, specie
   if(SaveTracks==TRUE){write.csv(AllTracks,file = 'DriftTracks.csv',row.names = FALSE)}
 }
 
+# Drift.map.comment.events(outfilename = "NBHF", station.numbers=c(7),
+#                          speciesID=list(c("NBHF")),
+#                          MapDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data/',DBDir='C:/Users/anne.simonis/Documents/CCE DASBR/code/CCE Map Data/NBHF Data',
+#                          spotcsvfile = list(c("DASBRs 1 to 6 - July 4 1700 to Aug 1 1700.csv", "DASBRs 1 to 7 - July 31 1700 to Aug 8 1700.csv",
+#                                               "DASBRs 1 to 10 - Aug 8 1700 to Aug 26 1700.csv", "DASBRs 1 to 13 - Aug 26 1700 to Sep 12 1700.csv",
+#                                               "DASBRs 1 to 13 - Sep 12 1700 to Oct 3 1700.csv", "DASBRs 1 to 13 - Oct 3 1700 to Oct 23 1700.csv",
+#                                               "DASBRs 16 to 22 - Oct 29 1700 to Nov 9 1700.csv",
+#                                               "DASBRs 16 to 22 - Nov 8 1600 to Nov 17 1600-rogue location for DASBR 20 removed.csv",
+#                                               "DASBRs 16 to 23 - Nov 17 1600 to Dec 3 1600.csv","SPOT_Sep27-Oct28.csv","SPOT_Oct28-Nov14.csv")),
+#                          DriftFile='NBHF_FileLookup.csv',
+#                          shiptrack.xy=NULL, lookupfile="spotlookup_US&MX_RETRIEVED.csv", figtitle='NBHF')
 
 
 

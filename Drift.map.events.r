@@ -1,6 +1,3 @@
-
-#2. Create mini map for single drift and large map for single species
-
 #Marmap tutorial: https://www.molecularecologist.com/2015/07/marmap/
 
 #Required libraries

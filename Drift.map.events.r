@@ -130,8 +130,8 @@ Drift.map.events <- function(outfilename, station.numbers = NULL, speciesID=NULL
           
           #Define buffer of area to plot around drifter track
           if(stations[n] %in% c(12,21)){buffer<-0.5} 
-          if(stations[n] %in% c(7,12,14,16,17,18,20,22,23)){buffer<-1}
-          if(stations[n] %in% c(4,8,10,13,19)){buffer<-2}
+          if(stations[n] %in% c(7,12,14,16,17,18,19,20,22,23)){buffer<-1}
+          if(stations[n] %in% c(4,8,10,13)){buffer<-2}
           lat1<-min(data.n.trunc$lat)-buffer
           lat2<-max(data.n.trunc$lat)+buffer
           lon1<-min(data.n.trunc$lon)-buffer
@@ -141,11 +141,11 @@ Drift.map.events <- function(outfilename, station.numbers = NULL, speciesID=NULL
           bat<-getNOAA.bathy(lon1,lon2,lat1,lat2,resolution=1,keep=TRUE)
         
           #Plot
-          figtitleN = paste(figtitle,"Drift",stations[n],sep=" ")
+          # figtitleN = paste(figtitle,"Drift",stations[n],sep=" ")
           plotfile<-paste(MapDir,"/","EventLocations/",Sys.Date(),'/',outfilenameN,'.png', sep="")
           png(plotfile,width=4.5,height=6,units="in",res=300)
           plot.bathy(bat,image=TRUE,bpal=list(c(0,max(bat),greys),c(min(bat),0,blues)),
-                     land=TRUE,n=0, main=figtitleN, deepest.isobath=-500, shallowest.isobath=-500,col='grey32',asp=NA)
+                     land=TRUE,n=0,  deepest.isobath=-500, shallowest.isobath=-500,col='grey32',asp=NA)
           scaleBathy(bat, deg=0.12, x="bottomleft", inset=5)
 
           points(Drift$long,Drift$lat,col="Grey",pch='.')
@@ -167,6 +167,7 @@ Drift.map.events <- function(outfilename, station.numbers = NULL, speciesID=NULL
           if(stations[n] %in% c(8)){offsetH<- -.5}
            text(data.n.trunc$long[2]+offsetH, data.n.trunc$lat[2]+offsetV, labels=stations[n], cex=1.5)
            
+           text(lon2-(lon2-lon1)/10,lat1+(lat2-lat1)/15, labels=paste(round(as.numeric(EndTime - lookup$dateTimeStart[LookupInd[1]])),' Days',sep=""))
           
           #Load in Event Info from Database 
           Events <- dbReadTable(conn, "Click_Detector_OfflineEvents")         #read offline events

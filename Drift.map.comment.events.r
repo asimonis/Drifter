@@ -147,11 +147,11 @@ Drift.map.comment.events <- function(outfilename, station.numbers = NULL, specie
         bat<-getNOAA.bathy(lon1,lon2,lat1,lat2,resolution=1,keep=TRUE)
         
         #Plot
-        figtitleN = paste(figtitle,"Drift",stations[n],sep=" ")
+        # figtitleN = paste(figtitle,"Drift",stations[n],sep=" ")
         plotfile<-paste(MapDir,"/","EventLocations/",Sys.Date(),'/',outfilenameN,'.png', sep="")
         png(plotfile,width=4.5,height=6,units="in",res=300)
         plot.bathy(bat,image=TRUE,bpal=list(c(0,10,greys),c(min(bat),0,blues)),
-                   land=TRUE,n=0, main=figtitleN, deepest.isobath=-500, shallowest.isobath=-500,col='grey32',asp=NA)
+                   land=TRUE,n=0,  deepest.isobath=-500, shallowest.isobath=-500,col='grey32',asp=NA)
         scaleBathy(bat, deg=0.12, x="bottomleft", inset=5)
         
         points(Drift$long,Drift$lat,col="Grey",pch='.')
@@ -173,6 +173,8 @@ Drift.map.comment.events <- function(outfilename, station.numbers = NULL, specie
         if(stations[n] %in% c(7,12,18,19,22)){offsetH<- -0.2}
         if(stations[n] %in% c(8)){offsetH<- -.5}
         text(data.n.trunc$long[2]+offsetH, data.n.trunc$lat[2]+offsetV, labels=stations[n], cex=1.5)
+        
+        text(lon2-(lon2-lon1)/10,lat1+(lat2-lat1)/15, labels=paste(round(as.numeric(EndTime - lookup$dateTimeStart[LookupInd[1]])),' Days',sep=""))
         
         
         #Load in Event Info from Database 
